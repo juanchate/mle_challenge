@@ -1,0 +1,22 @@
+name: 'Continuous Integration'  
+  
+on:  
+  push:  
+    branches:  
+      - '**'  
+  
+jobs:  
+  build-and-test:  
+    runs-on: ubuntu-latest  
+    steps:  
+    - name: Checkout  
+      uses: actions/checkout@v2  
+  
+    - name: Set up Docker Buildx  
+      uses: docker/setup-buildx-action@v1  
+  
+    - name: Build Docker image  
+      run: docker build . --file Dockerfile --tag mle-challenge  
+  
+    - name: Run tests  
+      run: make model-test && make api-test
