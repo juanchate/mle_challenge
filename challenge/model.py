@@ -27,10 +27,47 @@ class DelayModel:
             pd.get_dummies(data['OPERA'], prefix='OPERA'),  
             pd.get_dummies(data['TIPOVUELO'], prefix='TIPOVUELO'),  
             pd.get_dummies(data['MES'], prefix='MES')],  
-            axis=1)  
-        features = features[self.top_features]
+            axis=1)
+
+        # Check for unknown values
+        if 'MES' in data and data['MES'].max() > 12:
+            raise ValueError("Unknown value in MES column")
+        
+        known_opera_values = set(['American Airlines',
+                                'Air Canada',
+                                'Air France',
+                                'Aeromexico',
+                                'Aerolineas Argentinas',
+                                'Austral',
+                                'Avianca',
+                                'Alitalia',
+                                'British Airways',
+                                'Copa Air',
+                                'Delta Air',
+                                'Gol Trans',
+                                'Iberia',
+                                'K.L.M.',
+                                'Qantas Airways',
+                                'United Airlines',
+                                'Grupo LATAM',
+                                'Sky Airline',
+                                'Latin American Wings',
+                                'Plus Ultra Lineas Aereas',
+                                'JetSmart SPA',
+                                'Oceanair Linhas Aereas',
+                                'Lacsa'])
+        
+        if 'OPERA' in data and not set(data['OPERA'].unique()).issubset(known_opera_values):
+            raise ValueError("Unknown value in OPERA column")
+        
+        # Ensure only columns in top_features are selected
+        for col in features.columns:
+            if col not in self.top_features:
+                features.drop(col, axis=1, inplace=True)
+        
+        features = self.reorder_features(features)  # Move this line up to ensure all top_features are present
         features = features.fillna(False).astype(int)  # Fill NaN values with False and cast to int 
-  
+    
         if target_column:  
             data['min_diff'] = data.apply(self._get_min_diff, axis=1)  
             threshold_in_minutes = 15  
@@ -38,6 +75,7 @@ class DelayModel:
             target = data[[target_column]]  # Return target as DataFrame
             return features, target  
         return features  
+  
   
     def fit(self, features: pd.DataFrame, target: pd.DataFrame) -> None:  
         x_train, _, y_train, _ = train_test_split(features, target, test_size=0.33, random_state=42)  
