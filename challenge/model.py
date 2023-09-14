@@ -1,58 +1,71 @@
-import pandas as pd
-
-from typing import Tuple, Union, List
-
-class DelayModel:
-
-    def __init__(
-        self
-    ):
-        self._model = None # Model should be saved in this attribute.
-
-    def preprocess(
-        self,
-        data: pd.DataFrame,
-        target_column: str = None
-    ) -> Union(Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame):
-        """
-        Prepare raw data for training or predict.
-
-        Args:
-            data (pd.DataFrame): raw data.
-            target_column (str, optional): if set, the target is returned.
-
-        Returns:
-            Tuple[pd.DataFrame, pd.DataFrame]: features and target.
-            or
-            pd.DataFrame: features.
-        """
-        return
-
-    def fit(
-        self,
-        features: pd.DataFrame,
-        target: pd.DataFrame
-    ) -> None:
-        """
-        Fit model with preprocessed data.
-
-        Args:
-            features (pd.DataFrame): preprocessed data.
-            target (pd.DataFrame): target.
-        """
-        return
-
-    def predict(
-        self,
-        features: pd.DataFrame
-    ) -> List[int]:
-        """
-        Predict delays for new flights.
-
-        Args:
-            features (pd.DataFrame): preprocessed data.
-        
-        Returns:
-            (List[int]): predicted targets.
-        """
-        return
+import pandas as pd  
+import numpy as np  
+from datetime import datetime  
+from sklearn.model_selection import train_test_split  
+from sklearn.linear_model import LogisticRegression  
+from typing import Tuple, Union, List  
+  
+class DelayModel:  
+  
+    def __init__(self):  
+        self._model = None  
+        self.top_features = [  
+            "OPERA_Latin American Wings",  
+            "MES_7",  
+            "MES_10",  
+            "OPERA_Grupo LATAM",  
+            "MES_12",  
+            "TIPOVUELO_I",  
+            "MES_4",  
+            "MES_11",  
+            "OPERA_Sky Airline",  
+            "OPERA_Copa Air"  
+        ]  
+  
+    def preprocess(self, data: pd.DataFrame, target_column: str = None) -> Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:  
+        features = pd.concat([  
+            pd.get_dummies(data['OPERA'], prefix='OPERA'),  
+            pd.get_dummies(data['TIPOVUELO'], prefix='TIPOVUELO'),  
+            pd.get_dummies(data['MES'], prefix='MES')],  
+            axis=1)  
+        features = features[self.top_features]
+        features = features.fillna(False).astype(int)  # Fill NaN values with False and cast to int 
+  
+        if target_column:  
+            data['min_diff'] = data.apply(self._get_min_diff, axis=1)  
+            threshold_in_minutes = 15  
+            data[target_column] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)  
+            target = data[[target_column]]  # Return target as DataFrame
+            return features, target  
+        return features  
+  
+    def fit(self, features: pd.DataFrame, target: pd.DataFrame) -> None:  
+        x_train, _, y_train, _ = train_test_split(features, target, test_size=0.33, random_state=42)  
+        y_train = y_train.values.ravel()  # Convert target DataFrame to 1D array
+  
+        n_y0 = len(y_train[y_train == 0])  
+        n_y1 = len(y_train[y_train == 1])  
+  
+        self._model = LogisticRegression(class_weight={1: n_y0/len(y_train), 0: n_y1/len(y_train)})  
+        self._model.fit(x_train, y_train)  
+  
+    def predict(self, features: pd.DataFrame) -> List[int]:  
+        if self._model is None:
+            # If model isn't trained, train it with default data
+            default_data = pd.read_csv(filepath_or_buffer="./data/data.csv")
+            default_features, default_target = self.preprocess(default_data, target_column="delay")
+            self.fit(default_features, default_target)
+            
+        features = self.reorder_features(features)  
+        return self._model.predict(features).tolist()  
+  
+    def reorder_features(self, features: pd.DataFrame) -> pd.DataFrame:  
+        missing_cols = set(self.top_features) - set(features.columns)  
+        for c in missing_cols:  
+            features[c] = 0  
+        return features[self.top_features] 
+  
+    def _get_min_diff(self, data: pd.Series) -> float:  
+        fecha_o = datetime.strptime(data['Fecha-O'], '%Y-%m-%d %H:%M:%S')  
+        fecha_i = datetime.strptime(data['Fecha-I'], '%Y-%m-%d %H:%M:%S')  
+        return ((fecha_o - fecha_i).total_seconds()) / 60  
