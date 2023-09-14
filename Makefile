@@ -12,8 +12,8 @@ help:             	## Show the help.
 venv:			## Create a virtual environment
 	@echo "Creating virtualenv ..."
 	@rm -rf .venv
-	@python3 -m venv .venv
-	@./.venv/bin/pip install -U pip
+	@py -3.9 -m venv .venv
+	@.\.venv\Scripts\pip install -U pip
 	@echo
 	@echo "Run 'source .venv/bin/activate' to enable the environment"
 
@@ -23,7 +23,7 @@ install:		## Install dependencies
 	pip install -r requirements-test.txt
 	pip install -r requirements.txt
 
-STRESS_URL = http://127.0.0.1:8000 
+STRESS_URL = https://mle-challenge-service-qtbuusv5tq-rj.a.run.app
 .PHONY: stress-test
 stress-test:
 	# change stress url to your deployed app 

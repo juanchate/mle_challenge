@@ -1,3 +1,15 @@
-# syntax=docker/dockerfile:1.2
-FROM python:latest
-# put you docker configuration here
+# Use the official lightweight Python image.  
+FROM python:3.9-slim  
+  
+# Allow statements and log messages to immediately appear in the Cloud Run logs  
+ENV PYTHONUNBUFFERED True  
+  
+# Copy local code to the container image.  
+WORKDIR /app  
+COPY . ./  
+  
+# Install production dependencies.  
+RUN pip install -r requirements.txt  
+  
+# Run the web service on container startup.  
+CMD uvicorn challenge.api:app --host 0.0.0.0 --port $PORT  

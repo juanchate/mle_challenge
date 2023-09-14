@@ -1,0 +1,30 @@
+name: 'Continuous Delivery'    
+    
+on:    
+  push:    
+    branches:    
+      - 'main'    
+    
+jobs:    
+  deploy-to-gcp:    
+    runs-on: ubuntu-latest    
+    steps:    
+    - name: Checkout    
+      uses: actions/checkout@v2    
+    
+    - name: Set up Cloud SDK    
+      uses: google-github-actions/setup-gcloud@master    
+      with:    
+        service_account_key: ${{ secrets.GCP_SA_KEY }}    
+        project_id: mle-challenge    
+    
+    - name: Configure Docker to use the gcloud command-line tool as a credential helper    
+      run: gcloud auth configure-docker    
+    
+    - name: Build and push Docker image to Google Container Registry    
+      run: |    
+        docker build -t gcr.io/mle-challenge/mle-challenge:v1 .    
+        docker push gcr.io/mle-challenge/mle-challenge:v1    
+    
+    - name: Deploy to Google Cloud Run    
+      run: gcloud run deploy mle-challenge-service --image g
