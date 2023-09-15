@@ -8,8 +8,8 @@ ENV PYTHONUNBUFFERED True
 WORKDIR /app  
 COPY . ./  
   
-# Install production dependencies.  
-RUN pip install -r requirements.txt  
+# Install production and test dependencies.  
+RUN pip install -r requirements.txt -r requirements-test.txt
   
 # Run the web service on container startup.  
 CMD uvicorn challenge.api:app --host 0.0.0.0 --port $PORT  
