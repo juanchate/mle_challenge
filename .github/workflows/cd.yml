@@ -1,36 +1,39 @@
-name: 'Continuous Delivery'    
-    
-on:    
-  push:    
-    branches:    
-      - 'main'  # Esto asegura que solo se ejecute en la rama main
-    
-jobs:    
-  deploy-to-gcp:    
-    needs: build-and-test
-    runs-on: ubuntu-latest    
-    steps:
-    - name: Download CI-passed artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: ci-passed
-
-    - name: Checkout    
-      uses: actions/checkout@v2    
-    
-    - name: Set up Cloud SDK    
-      uses: google-github-actions/setup-gcloud@v0.2.1    
-      with:    
-        service_account_key: ${{ secrets.GCP_SA_KEY }}    
-        project_id: mle-challenge    
-    
-    - name: Configure Docker to use the gcloud command-line tool as a credential helper    
-      run: gcloud auth configure-docker    
-    
-    - name: Build and push Docker image to Google Container Registry    
-      run: |    
-        docker build -t gcr.io/mle-challenge/mle-challenge:v1 .    
-        docker push gcr.io/mle-challenge/mle-challenge:v1    
-    
-    - name: Deploy to Google Cloud Run    
+name: 'Continuous Delivery'      
+      
+on:      
+  push:      
+    branches:      
+      - 'main'  # This will make the workflow run on every push to the main branch  
+      
+jobs:   
+  build-and-push:    
+    runs-on: ubuntu-latest      
+    steps:  
+    - name: Download CI-passed artifact  
+      uses: actions/download-artifact@v2  
+      with:  
+        name: ci-passed  
+  
+    - name: Checkout      
+      uses: actions/checkout@v2      
+      
+    - name: Set up Cloud SDK      
+      uses: google-github-actions/setup-gcloud@v0.2.1      
+      with:      
+        service_account_key: ${{ secrets.GCP_SA_KEY }}      
+        project_id: mle-challenge      
+      
+    - name: Configure Docker to use the gcloud command-line tool as a credential helper      
+      run: gcloud auth configure-docker      
+      
+    - name: Build and push Docker image to Google Container Registry      
+      run: |      
+        docker build -t gcr.io/mle-challenge/mle-challenge:v1 .      
+        docker push gcr.io/mle-challenge/mle-challenge:v1  
+  
+  deploy-to-gcp:      
+    needs: build-and-push  
+    runs-on: ubuntu-latest   
+    steps:     
+    - name: Deploy to Google Cloud Run      
       run: gcloud run deploy mle-challenge-service --image gcr.io/mle-challenge/mle-challenge:v1 --region southamerica-east1

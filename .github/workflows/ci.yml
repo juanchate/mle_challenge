@@ -3,7 +3,7 @@ name: 'Continuous Integration'
 on:
   push:
     branches:
-      - '*'  # Esto hará que se ejecute en cualquier rama
+      - '*'  # This will make the workflow run on every push
 
 jobs:
   build-and-test:
