@@ -3,7 +3,7 @@ name: 'Continuous Integration'
 on:
   push:
     branches:
-      - 'main'
+      - '*'  # Esto hará que se ejecute en cualquier rama
 
 jobs:
   build-and-test:
@@ -18,17 +18,14 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: mle-challenge
 
-    - name: Configure Docker to use the gcloud command-line tool as a credential helper
-      run: gcloud auth configure-docker
-
     - name: Build Docker image
       run: docker build -t gcr.io/mle-challenge/mle-challenge:v1 .
 
     - name: Run Model Tests
-      run: make model-test
+      run: docker run --rm gcr.io/mle-challenge/mle-challenge:v1 make model-test
 
     - name: Run API Tests
-      run: make api-test
+      run: docker run --rm gcr.io/mle-challenge/mle-challenge:v1 make api-test
 
     - name: Create Artifact if CI Success
       run: echo "CI passed on $(date)" > ci-passed.txt
