@@ -31,4 +31,4 @@ jobs:
     runs-on: ubuntu-latest   
     steps:     
     - name: Deploy to Google Cloud Run      
-      run: gcloud run deploy mle-challenge-service --image gcr.io/mle-challenge/mle-challenge:v1 --region southamerica-east1
+      run: gcloud run deploy mle-challenge-service --image gcr.io/mle-challenge/mle-challenge:v1 --region southamerica-east1 --project mle-challenge
