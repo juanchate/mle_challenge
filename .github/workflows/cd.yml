@@ -27,4 +27,4 @@ jobs:
         docker push gcr.io/mle-challenge/mle-challenge:v1    
     
     - name: Deploy to Google Cloud Run    
-      run: gcloud run deploy mle-challenge-service --image g
+      run: gcloud run deploy mle-challenge-service --image gcr.io/mle-challenge/mle-challenge:v1 --region southamerica-east1
