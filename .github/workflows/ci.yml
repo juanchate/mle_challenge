@@ -29,3 +29,12 @@ jobs:
 
     - name: Run API Tests
       run: make api-test
+
+    - name: Create Artifact if CI Success
+      run: echo "CI passed on $(date)" > ci-passed.txt
+
+    - name: Upload CI-passed artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ci-passed
+        path: ci-passed.txt
