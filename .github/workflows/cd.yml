@@ -3,17 +3,18 @@ name: 'Continuous Delivery'
 on:    
   push:    
     branches:    
-      - 'main'    
+      - 'main'  # Esto asegura que solo se ejecute en la rama main
     
 jobs:    
   deploy-to-gcp:    
+    needs: build-and-test
     runs-on: ubuntu-latest    
     steps:
     - name: Download CI-passed artifact
       uses: actions/download-artifact@v2
       with:
         name: ci-passed
-            
+
     - name: Checkout    
       uses: actions/checkout@v2    
     
