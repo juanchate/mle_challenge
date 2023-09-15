@@ -1,5 +1,8 @@
 # Use the official lightweight Python image.  
-FROM python:3.9-slim  
+FROM python:3.9-slim
+
+# Install make  
+RUN apt-get update && apt-get install -y make  
   
 # Allow statements and log messages to immediately appear in the Cloud Run logs  
 ENV PYTHONUNBUFFERED True  
